@@ -25,7 +25,7 @@ document.getElementById('delivery-form').addEventListener('submit', async functi
 
     try {
         // 3. СТУЧИМСЯ В ТВОЙ БЭКЕНД PROTOQOL (Убедись, что порт 8000 верный)
-        const response = await fetch('http://localhost:8000/v1/enterprise/etch', {
+        const response = await fetch('http://localhost:8000/api/v1/enterprise/etch', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
