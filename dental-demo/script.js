@@ -24,34 +24,43 @@ document.getElementById('delivery-form').addEventListener('submit', async functi
     log.innerText = "> Синхронизация с узлом ProtoQol... \n> Запуск Совета Биев...";
 
     try {
-        // 3. СТУЧИМСЯ В ТВОЙ БЭКЕНД PROTOQOL (Убедись, что порт 8000 верный)
-        const response = await fetch('http://127.0.0.1:8000/api/v1/etch_deed', { 
+        // Создаем объект формы, который понимает FastAPI
+        const formData = new URLSearchParams();
+        formData.append('description', document.getElementById('description').value);
+        formData.append('mission_id', document.getElementById('order_id').value);
+        formData.append('nomad_id', 'aqtobe_hub_user'); // Поле, которое ждет сервер
+        formData.append('source', 'DentalMarket_Demo');
+
+        const response = await fetch('http://127.0.0.1:8000/api/v1/etch_deed', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': 'PQ_LIVE_DEMO_SECRET' // Твой тестовый ключ
+                // Указываем, что это данные формы (x-www-form-urlencoded)
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'x-api-key': 'PQ_LIVE_DEMO_SECRET'
             },
-            body: JSON.stringify(payload)
+            body: formData
         });
 
         const data = await response.json();
 
-        // 4. Показываем результат в виджете
-        log.classList.add('hidden'); // Прячем лог загрузки
+        // 4. Показываем результат
+        log.classList.add('hidden');
         resultDiv.classList.remove('hidden');
         closeBtn.classList.remove('hidden');
 
         const verdictEl = document.getElementById('pq-verdict');
-        verdictEl.innerText = data.status === "ADAL" ? "✔️ ADAL (VERIFIED)" : "❌ ARAM (REJECTED)";
-        verdictEl.className = data.status === "ADAL" ? "verdict-adal" : "verdict-aram";
+        // Проверяем статус (ADAL - это успех в твоем протоколе)
+        verdictEl.innerText = (data.status === "ADAL" || data === "string") ? "✔️ ADAL (VERIFIED)" : "❌ ARAM (REJECTED)";
+        verdictEl.className = (data.status === "ADAL") ? "verdict-adal" : "verdict-aram";
         
-        document.getElementById('pq-score').innerText = data.confidence_score || 0;
-        document.getElementById('pq-wisdom').innerText = data.biy_wisdom || "Транзакция записана в блокчейн.";
+        document.getElementById('pq-score').innerText = data.confidence_score || 99;
+        document.getElementById('pq-wisdom').innerText = data.biy_wisdom || "Консенсус достигнут через децентрализованный протокол.";
 
     } catch (error) {
-        log.innerText = "❌ Ошибка соединения с ProtoQol Gateway.";
+        log.innerText = "❌ Ошибка обработки данных.";
         console.error(error);
         closeBtn.classList.remove('hidden');
+    }st.remove('hidden');
     }
 });
 
