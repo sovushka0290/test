@@ -2,44 +2,97 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DentalMarket - Портал Курьера</title>
+    <title>DentalMarket - Проверка Доставки</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Стили для виджета ProtoQol */
+        #protoqol-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 10000; font-family: 'Courier New', Courier, monospace; }
+        .pq-box { background: #000; border: 2px solid #00ff41; padding: 30px; color: #00ff41; max-width: 500px; width: 90%; box-shadow: 0 0 20px #00ff41; border-radius: 10px; }
+        .hidden { display: none !important; }
+        .verdict-adal { color: #00ff41; font-size: 24px; font-weight: bold; }
+        .verdict-aram { color: #ff0000; font-size: 24px; font-weight: bold; }
+        #pq-close { margin-top: 20px; background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <div class="client-container">
-        <h1>📦 Отчет о доставке оборудования</h1>
-        <p>DentalMarket Partner Portal</p>
-
+    <div class="container">
+        <h1>📦 DentalMarket: Портал Курьера</h1>
         <form id="delivery-form">
-            <label>ID Заказа:</label>
-            <input type="text" id="order_id" value="ORD-7742" disabled>
-            
-            <label>Описание доставки:</label>
-            <textarea id="description" rows="3">Бормашина доставлена в клинику №4, г. Актобе. Получатель подтвердил целостность.</textarea>
-            
-            <button type="submit" class="submit-btn">Подтвердить доставку</button>
+            <input type="text" id="order_id" placeholder="Номер заказа (Mission ID)" value="ORD-777" required>
+            <textarea id="description" placeholder="Описание выполненной работы..." required>Доставка медикаментов в клинику "Стоматология №1" выполнена полностью.</textarea>
+            <button type="submit" class="btn-primary">Подтвердить доставку</button>
         </form>
     </div>
 
     <div id="protoqol-overlay" class="hidden">
-        <div class="protoqol-widget">
-            <div class="pq-header">
-                <span class="pq-logo">⟁ ProtoQol</span>
-                <span class="pq-status" id="pq-status-text">Инициализация...</span>
+        <div class="pq-box">
+            <h2>🛡️ PROTOQOL INTEGRITY GATEWAY</h2>
+            <hr border="1" color="#00ff41">
+            <div id="pq-log">> Инициализация протокола...<br>> Подключение к Совету Биев...</div>
+            
+            <div id="pq-result" class="hidden">
+                <p>СТАТУС: <span id="pq-verdict"></span></p>
+                <p>УВЕРЕННОСТЬ СЕТИ: <span id="pq-score">0</span>%</p>
+                <p>ВЕРДИКТ БИЯ: <br><i id="pq-wisdom"></i></p>
             </div>
-            <div class="pq-body">
-                <p id="pq-log" class="typing-text">Подключение к Совету Биев...</p>
-                <div id="pq-result" class="hidden">
-                    <h2 id="pq-verdict">VERIFIED</h2>
-                    <p><strong>Confidence:</strong> <span id="pq-score">0</span>%</p>
-                    <p><strong>Biy Wisdom:</strong> <span id="pq-wisdom">...</span></p>
-                </div>
-            </div>
-            <button id="pq-close" class="hidden">Закрыть и продолжить</button>
+            
+            <button id="pq-close" class="hidden">ЗАКРЫТЬ ПРОТОКОЛ</button>
         </div>
     </div>
 
-    <script src="script.js?v=2"></script>
+    <script>
+    document.getElementById('delivery-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const overlay = document.getElementById('protoqol-overlay');
+        const log = document.getElementById('pq-log');
+        const resultDiv = document.getElementById('pq-result');
+        const closeBtn = document.getElementById('pq-close');
+        
+        overlay.classList.remove('hidden');
+        resultDiv.classList.add('hidden');
+        closeBtn.classList.add('hidden');
+        log.innerHTML = "> Отправка данных в B2B Gateway...<br>> Ожидание консенсуса ИИ-агентов...";
+
+        // ФОРМИРУЕМ ДАННЫЕ (как хочет Swagger: x-www-form-urlencoded)
+        const formData = new URLSearchParams();
+        formData.append('description', document.getElementById('description').value);
+        formData.append('mission_id', document.getElementById('order_id').value);
+        formData.append('nomad_id', 'aqtobe_hub_user'); // Поле из Swagger
+        formData.append('source', 'DentalMarket_Demo');
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/v1/etch_deed', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'x-api-key': 'PQ_LIVE_DEMO_SECRET'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            log.classList.add('hidden');
+            resultDiv.classList.remove('hidden');
+            closeBtn.classList.remove('hidden');
+
+            const isAdal = (data.status === "ADAL" || data.status === "VERIFIED" || data === "string");
+            const verdictEl = document.getElementById('pq-verdict');
+            verdictEl.innerText = isAdal ? "✔️ ADAL (VERIFIED)" : "❌ ARAM (REJECTED)";
+            verdictEl.className = isAdal ? "verdict-adal" : "verdict-aram";
+            
+            document.getElementById('pq-score').innerText = data.confidence_score || 99;
+            document.getElementById('pq-wisdom').innerText = data.biy_wisdom || "Транзакция успешно зафиксирована в реестре Solana.";
+        } catch (error) {
+            log.innerHTML = "❌ ОШИБКА: Сервер ProtoQol не отвечает.<br>Проверь, запущен ли python3 api/main.py";
+            closeBtn.classList.remove('hidden');
+            console.error(error);
+        }
+    });
+
+    document.getElementById('pq-close').addEventListener('click', () => {
+        document.getElementById('protoqol-overlay').classList.add('hidden');
+    });
+    </script>
 </body>
 </html>
