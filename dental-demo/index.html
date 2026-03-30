@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DentalMarket - Портал Курьера</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="client-container">
+        <h1>📦 Отчет о доставке оборудования</h1>
+        <p>DentalMarket Partner Portal</p>
+
+        <form id="delivery-form">
+            <label>ID Заказа:</label>
+            <input type="text" id="order_id" value="ORD-7742" disabled>
+            
+            <label>Описание доставки:</label>
+            <textarea id="description" rows="3">Бормашина доставлена в клинику №4, г. Актобе. Получатель подтвердил целостность.</textarea>
+            
+            <button type="submit" class="submit-btn">Подтвердить доставку</button>
+        </form>
+    </div>
+
+    <div id="protoqol-overlay" class="hidden">
+        <div class="protoqol-widget">
+            <div class="pq-header">
+                <span class="pq-logo">⟁ ProtoQol</span>
+                <span class="pq-status" id="pq-status-text">Инициализация...</span>
+            </div>
+            <div class="pq-body">
+                <p id="pq-log" class="typing-text">Подключение к Совету Биев...</p>
+                <div id="pq-result" class="hidden">
+                    <h2 id="pq-verdict">VERIFIED</h2>
+                    <p><strong>Confidence:</strong> <span id="pq-score">0</span>%</p>
+                    <p><strong>Biy Wisdom:</strong> <span id="pq-wisdom">...</span></p>
+                </div>
+            </div>
+            <button id="pq-close" class="hidden">Закрыть и продолжить</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
